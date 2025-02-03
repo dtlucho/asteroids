@@ -3,8 +3,8 @@ import pygame
 from constants import *
 from player import Player
 from asteroid import Asteroid
-from shot import Shot
 from asteroidfield import AsteroidField
+from shot import Shot
 
 def main():
     print("Starting asteroids!")
