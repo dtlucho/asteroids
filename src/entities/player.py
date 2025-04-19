@@ -7,6 +7,7 @@ spaceship. It handles player movement, rotation, and shooting.
 
 import pygame
 import math
+import random
 
 from src.entities.base import CircleShape
 from src.entities.shot import Shot
@@ -64,20 +65,133 @@ class Player(CircleShape):
         self.has_speed_boost = False
         self.shield_color = (0, 255, 255)  # Cyan
 
-    def triangle(self: "Player") -> list[pygame.Vector2]:
+    def ship_vertices(self: "Player") -> list[pygame.Vector2]:
         """
-        Calculate the vertices of the player's triangle shape.
+        Calculate the vertices of the player's ship shape.
 
         Returns:
-            list: Three points defining the triangle's vertices
+            list: Points defining the ship's vertices for a more detailed design
         """
         # Use the direction vector for consistency
         forward = self.direction
-        right = pygame.Vector2(forward.y, -forward.x) * self.radius / 1.5
-        a = self.position + forward * self.radius  # Front point
-        b = self.position - forward * self.radius - right  # Back-left point
-        c = self.position - forward * self.radius + right  # Back-right point
-        return [a, b, c]
+        right = pygame.Vector2(forward.y, -forward.x)
+        
+        # Main ship body (more detailed than a simple triangle)
+        nose = self.position + forward * self.radius * 1.2  # Front point (slightly longer)
+        rear_center = self.position - forward * self.radius * 0.8  # Rear center point
+        left_wing = self.position - forward * self.radius * 0.5 - right * self.radius * 0.8  # Left wing
+        right_wing = self.position - forward * self.radius * 0.5 + right * self.radius * 0.8  # Right wing
+        left_rear = self.position - forward * self.radius - right * self.radius * 0.4  # Left rear
+        right_rear = self.position - forward * self.radius + right * self.radius * 0.4  # Right rear
+        
+        return [nose, left_wing, left_rear, rear_center, right_rear, right_wing]
+    
+    def collision_polygon(self: "Player") -> list[pygame.Vector2]:
+        """
+        Get a simplified polygon for collision detection.
+        
+        Returns:
+            list: Points defining a polygon for collision detection
+        """
+        # Use a simpler shape for collision detection (still better than a circle)
+        vertices = self.ship_vertices()
+        # Use a subset of vertices for collision detection
+        return [vertices[0], vertices[1], vertices[3], vertices[5]]  # nose, left_wing, rear_center, right_wing
+    
+    def check_collision(self, other):
+        """
+        Check if this ship collides with another object.
+        
+        For ship-to-asteroid collisions, we use polygon-to-circle collision detection.
+        
+        Args:
+            other: Another game object to check collision with
+            
+        Returns:
+            bool: True if collision detected, False otherwise
+        """
+        # If player has a shield, still use circle collision for simplicity
+        if self.has_shield:
+            return super().check_collision(other)
+            
+        # For non-shielded collisions, use polygon-to-circle collision detection
+        # Get the collision polygon
+        polygon = self.collision_polygon()
+        
+        # If the other object is a circle (like an asteroid or power-up)
+        if isinstance(other, CircleShape):
+            # Check if any of the polygon edges intersect with the circle
+            for i in range(len(polygon)):
+                p1 = polygon[i]
+                p2 = polygon[(i + 1) % len(polygon)]
+                
+                # Check if the circle intersects with this edge
+                if self._circle_intersects_line(other.position, other.radius, p1, p2):
+                    return True
+            
+            # Check if the circle center is inside the polygon
+            if self._point_in_polygon(other.position, polygon):
+                return True
+                
+            return False
+        else:
+            # Fallback to default circle collision
+            return super().check_collision(other)
+    
+    def _circle_intersects_line(self, circle_center, circle_radius, line_start, line_end):
+        """
+        Check if a circle intersects with a line segment.
+        
+        Args:
+            circle_center: Center point of the circle
+            circle_radius: Radius of the circle
+            line_start: Start point of the line segment
+            line_end: End point of the line segment
+            
+        Returns:
+            bool: True if the circle intersects with the line segment
+        """
+        # Calculate the closest point on the line to the circle center
+        line_vec = line_end - line_start
+        line_len = line_vec.length()
+        line_unit_vec = line_vec / line_len if line_len > 0 else pygame.Vector2(0, 0)
+        
+        # Vector from line start to circle center
+        start_to_center = circle_center - line_start
+        
+        # Project start_to_center onto the line vector
+        projection_length = start_to_center.dot(line_unit_vec)
+        projection_length = max(0, min(line_len, projection_length))  # Clamp to line segment
+        
+        # Calculate the closest point on the line segment
+        closest_point = line_start + line_unit_vec * projection_length
+        
+        # Check if the distance from the circle center to the closest point is less than the radius
+        return (circle_center - closest_point).length() <= circle_radius
+    
+    def _point_in_polygon(self, point, polygon):
+        """
+        Check if a point is inside a polygon using the ray casting algorithm.
+        
+        Args:
+            point: The point to check
+            polygon: List of points defining the polygon
+            
+        Returns:
+            bool: True if the point is inside the polygon
+        """
+        # Ray casting algorithm
+        inside = False
+        n = len(polygon)
+        
+        for i in range(n):
+            j = (i + 1) % n
+            if ((polygon[i].y > point.y) != (polygon[j].y > point.y)) and \
+               (point.x < polygon[i].x + (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / 
+                (polygon[j].y - polygon[i].y)):
+                inside = not inside
+                
+        return inside
 
     def draw(self: "Player", screen: pygame.Surface):
         """
@@ -96,9 +210,42 @@ class Player(CircleShape):
                 self.radius * 1.3, 
                 2
             )
+            
+            # Add a pulsing inner shield
+            pulse_factor = 0.5 + 0.2 * math.sin(pygame.time.get_ticks() / 200)
+            pygame.draw.circle(
+                screen,
+                self.shield_color,
+                self.position,
+                self.radius * pulse_factor,
+                1
+            )
         
-        # Draw the ship
-        pygame.draw.polygon(screen, (255, 255, 255), self.triangle(), 2)
+        # Get ship vertices
+        ship_points = self.ship_vertices()
+        
+        # Draw the ship outline
+        pygame.draw.polygon(screen, (255, 255, 255), ship_points, 2)
+        
+        # Draw cockpit (small circle in the middle-front of the ship)
+        cockpit_pos = self.position + self.direction * self.radius * 0.3
+        pygame.draw.circle(screen, (255, 255, 255), cockpit_pos, self.radius * 0.15, 1)
+        
+        # Draw engine glow when thrusting
+        if self.thrusting:
+            # Engine position (back of the ship)
+            engine_pos = self.position - self.direction * self.radius * 0.8
+            
+            # Flickering effect for the engine glow
+            flicker = random.uniform(0.7, 1.0)
+            
+            # Draw engine glow (triangle)
+            thrust_length = self.radius * 0.6 * flicker
+            left_point = engine_pos - self.direction * thrust_length - pygame.Vector2(self.direction.y, -self.direction.x) * self.radius * 0.2
+            right_point = engine_pos - self.direction * thrust_length + pygame.Vector2(self.direction.y, -self.direction.x) * self.radius * 0.2
+            
+            # Draw the engine flame
+            pygame.draw.polygon(screen, (255, 165, 0), [engine_pos, left_point, right_point])
         
         # Draw visual indicator for triple shot
         if self.has_triple_shot:
@@ -118,9 +265,26 @@ class Player(CircleShape):
         
         # Draw visual indicator for speed boost
         if self.has_speed_boost:
-            # Draw small trail behind the ship
+            # Draw speed trails behind the ship
             backward = -self.direction
-            trail_pos = self.position + backward * (self.radius + 5)
+            right = pygame.Vector2(self.direction.y, -self.direction.x)
+            
+            # Multiple trail points for a motion blur effect
+            for i in range(3):
+                offset = (i + 1) * 5
+                trail_pos = self.position + backward * (self.radius + offset)
+                
+                # Left and right trails
+                left_trail = trail_pos - right * (self.radius * 0.3)
+                right_trail = trail_pos + right * (self.radius * 0.3)
+                
+                # Draw fading trails
+                alpha = 255 - (i * 70)  # Fade out with distance
+                color = (0, 255, 255, alpha)  # Cyan with alpha
+                
+                # Draw trail lines
+                pygame.draw.line(screen, color, left_trail, self.position - right * (self.radius * 0.4), 1)
+                pygame.draw.line(screen, color, right_trail, self.position + right * (self.radius * 0.4), 1)
             
             # Draw a small flame-like shape
             trail_points = [
