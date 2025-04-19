@@ -20,14 +20,14 @@ from src.utils.constants import (
 
 class AsteroidField(pygame.sprite.Sprite):
     """
-    Manages the spawning and creation of asteroids.
-    
+    Manages the spawning and creation of asteroids.game_state_callback
+
     The AsteroidField class is responsible for:
     - Spawning new asteroids at random edges of the screen
     - Controlling the rate and difficulty of asteroid spawning
     - Managing asteroid velocity and size distribution
     """
-    
+
     edges = [
         [
             pygame.Vector2(1, 0),
@@ -51,10 +51,10 @@ class AsteroidField(pygame.sprite.Sprite):
         ],
     ]
 
-    def __init__(self):
+    def __init__(self: "AsteroidField"):
         """
         Initialize the asteroid field manager.
-        
+
         Sets up initial spawn timer and difficulty parameters.
         """
         pygame.sprite.Sprite.__init__(self, self.containers)
@@ -70,7 +70,7 @@ class AsteroidField(pygame.sprite.Sprite):
     ):
         """
         Spawn a new asteroid with the given parameters.
-        
+
         Args:
             radius: Size of the asteroid to spawn
             position: Initial position of the asteroid
@@ -82,7 +82,7 @@ class AsteroidField(pygame.sprite.Sprite):
     def update(self: "AsteroidField", dt: float):
         """
         Update the asteroid field, potentially spawning new asteroids.
-        
+
         Args:
             dt: Delta time in seconds since the last frame
         """

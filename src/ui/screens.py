@@ -10,7 +10,13 @@ This module contains functions for rendering game UI elements including:
 import math
 import pygame
 import time
-from src.utils.constants import SCREEN_WIDTH, SCREEN_HEIGHT, UI_COLORS, UI_POSITIONS, SHOW_FPS
+from src.utils.constants import (
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+    UI_COLORS,
+    UI_POSITIONS,
+    SHOW_FPS,
+)
 
 # List to store floating score texts
 floating_scores = []
@@ -166,7 +172,7 @@ def draw_game_screen(
             UI_POSITIONS["score"],
             centered=False,
         )
-        
+
         # Update and draw floating score texts
         update_floating_scores(dt)
         draw_floating_scores(screen, small_font)
@@ -274,7 +280,7 @@ def draw_paused_screen(
     )
 
 
-def add_floating_score(position, value):
+def add_floating_score(position: tuple[int, int], value: int):
     """
     Add a floating score text at the specified position
 
@@ -282,17 +288,19 @@ def add_floating_score(position, value):
         position: (x, y) tuple for the position where the score was earned
         value: Score value to display
     """
-    floating_scores.append({
-        "position": pygame.Vector2(position),
-        "value": value,
-        "color": (255, 255, 100),  # Yellow color for visibility
-        "created_time": time.time(),
-        "lifetime": 1.5,  # How long the text stays on screen
-        "velocity": pygame.Vector2(0, -50)  # Move upward
-    })
+    floating_scores.append(
+        {
+            "position": pygame.Vector2(position),
+            "value": value,
+            "color": (255, 255, 100),  # Yellow color for visibility
+            "created_time": time.time(),
+            "lifetime": 1.5,  # How long the text stays on screen
+            "velocity": pygame.Vector2(0, -50),  # Move upward
+        }
+    )
 
 
-def update_floating_scores(dt):
+def update_floating_scores(dt: float):
     """
     Update floating score positions and lifetimes
 
@@ -310,7 +318,7 @@ def update_floating_scores(dt):
             floating_scores.pop(i)
 
 
-def draw_floating_scores(screen, font):
+def draw_floating_scores(screen: pygame.Surface, font: pygame.font.Font):
     """
     Draw all active floating score texts
 
@@ -322,10 +330,10 @@ def draw_floating_scores(screen, font):
         # Calculate alpha based on remaining lifetime
         elapsed = time.time() - score["created_time"]
         alpha = max(0, min(255, int(255 * (1 - elapsed / score["lifetime"]))))
-        
+
         # Create color with alpha
         color = list(score["color"])
-        
+
         # Draw the score text
         text = f"+{score['value']}"
         text_surface = font.render(text, True, color)
