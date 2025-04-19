@@ -23,8 +23,10 @@ from src.entities.asteroid import Asteroid
 from src.managers.asteroid_manager import AsteroidField
 from src.managers.collision_manager import CollisionManager
 from src.managers.sound_manager import SoundManager
+from src.managers.power_up_manager import PowerUpManager
 from src.entities.shot import Shot
 from src.ui import screens
+from src.entities.power_up import PowerUp
 
 
 class Game:
@@ -58,32 +60,43 @@ class Game:
         self.normal_font = self.resource_manager.get_font(36)  # Medium font for instructions
         self.small_font = self.resource_manager.get_font(24)  # Small font for scores/misc
         
-        # Initialize sound manager
-        self.sound_manager = SoundManager(self.resource_manager)
-        self.sound_manager.load_sounds()
-        
-        # Set sound manager references in game entities
-        Player.sound_manager = self.sound_manager
-        Asteroid.sound_manager = self.sound_manager
-
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("Asteroids")  # Set window title
-        self.clock = pygame.time.Clock()
-
         # Create sprite groups for game objects
         self.updatable = pygame.sprite.Group()
         self.drawable = pygame.sprite.Group()
         self.asteroids = pygame.sprite.Group()
         self.shots = pygame.sprite.Group()
+        self.power_ups = pygame.sprite.Group()
+        
+        # Create managers
+        self.collision_manager = CollisionManager(self.handle_collision_event)
+        self.power_up_manager = PowerUpManager()
+        
+        # Make sure the power-up manager uses our sprite group
+        self.power_up_manager.power_ups = self.power_ups
+        
+        # Create sound manager and load sounds
+        self.sound_manager = SoundManager(self.resource_manager)
+        self.sound_manager.load_sounds()
+        
+        # Set sound manager references in game entities and managers
+        Player.sound_manager = self.sound_manager
+        Asteroid.sound_manager = self.sound_manager
+        PowerUp.sound_manager = self.sound_manager
+        self.collision_manager.sound_manager = self.sound_manager
+        self.power_up_manager.sound_manager = self.sound_manager
+
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Asteroids")  # Set window title
+        self.clock = pygame.time.Clock()
 
         # Set container groups for each game object type
         Player.containers = (self.updatable, self.drawable)
         Asteroid.containers = (self.asteroids, self.updatable, self.drawable)
         AsteroidField.containers = self.updatable
         Shot.containers = (self.shots, self.updatable, self.drawable)
-
-        # Create collision manager
-        self.collision_manager = CollisionManager(self.handle_collision_event)
+        
+        # Set power-up containers - this is important for proper sprite group management
+        PowerUp.containers = (self.power_ups, self.updatable, self.drawable)
 
         # Create initial game objects
         self.player = None
@@ -128,13 +141,15 @@ class Game:
         self.drawable.empty()
         self.asteroids.empty()
         self.shots.empty()
+        self.power_ups.empty()
 
         # Recreate player and asteroid field
         self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         self.asteroid_field = AsteroidField()
         
-        # Reset collision manager
+        # Reset managers
         self.collision_manager.reset()
+        self.power_up_manager.reset()
         
         # Reset difficulty
         self.difficulty_level = 1
@@ -192,6 +207,9 @@ class Game:
             # Check for collisions using the collision manager
             self.collision_manager.check_player_asteroid_collisions(self.player, self.asteroids)
             self.collision_manager.check_shot_asteroid_collisions(self.shots, self.asteroids)
+            
+            # Update power-ups
+            self.power_up_manager.update(self.dt, self.player)
 
             # Update difficulty level
             self.difficulty_timer += self.dt
@@ -236,7 +254,11 @@ class Game:
         if self.current_game_state == GameState.MENU:
             screens.draw_menu_screen(self.screen, self.title_font, self.normal_font, current_time)
         elif self.current_game_state == GameState.PLAYING:
+            # Draw game objects
             screens.draw_game_screen(self.drawable, self.screen, self.small_font, self.collision_manager.get_score(), self.dt)
+            
+            # Draw power-ups
+            self.power_up_manager.draw(self.screen)
         elif self.current_game_state == GameState.PAUSED:
             screens.draw_paused_screen(self.drawable, self.screen, self.title_font, self.normal_font)
         elif self.current_game_state == GameState.GAME_OVER:

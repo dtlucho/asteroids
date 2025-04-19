@@ -8,6 +8,7 @@ collision detection and response logic in the game.
 import pygame
 from src.utils.constants import ASTEROID_BASE_SCORE, ASTEROID_MIN_RADIUS
 from src.ui import screens
+from src.entities.power_up import PowerUpType
 
 
 class CollisionManager:
@@ -33,10 +34,15 @@ class CollisionManager:
         """
         self.game_state_callback = game_state_callback
         self.score = 0
+        
+        # Reference to sound manager (set by Game class)
+        self.sound_manager = None
     
     def check_player_asteroid_collisions(self, player, asteroids):
         """
         Check for collisions between the player and asteroids.
+        
+        If the player has a shield, it will absorb one collision.
         
         Args:
             player: The player object
@@ -47,9 +53,24 @@ class CollisionManager:
         """
         for asteroid in asteroids:
             if player.check_collision(asteroid):
-                if self.game_state_callback:
-                    self.game_state_callback("player_death")
-                return True
+                # Check if player has a shield
+                if player.has_active_shield():
+                    # Shield absorbs the collision
+                    player.remove_power_up(PowerUpType.SHIELD)
+                    
+                    # Create a new smaller asteroid (like a deflection)
+                    asteroid.split()
+                    
+                    # Play shield hit sound if available
+                    if self.sound_manager:
+                        self.sound_manager.play("explosion_small")
+                    
+                    return False
+                else:
+                    # No shield, player is hit
+                    if self.game_state_callback:
+                        self.game_state_callback("player_death")
+                    return True
         return False
     
     def check_shot_asteroid_collisions(self, shots, asteroids):
