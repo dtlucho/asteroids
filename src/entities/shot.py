@@ -7,8 +7,8 @@ by the player. Shots travel in a straight line and can destroy asteroids.
 
 import pygame
 
-from circleshape import CircleShape
-from constants import SHOT_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT, SHOT_LIFETIME
+from src.entities.base import CircleShape
+from src.utils.constants import SHOT_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT, SHOT_LIFETIME
 
 
 class Shot(CircleShape):

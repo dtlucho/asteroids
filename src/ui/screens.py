@@ -10,7 +10,7 @@ This module contains functions for rendering game UI elements including:
 import math
 import pygame
 import time
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, UI_COLORS, UI_POSITIONS, SHOW_FPS
+from src.utils.constants import SCREEN_WIDTH, SCREEN_HEIGHT, UI_COLORS, UI_POSITIONS, SHOW_FPS
 
 # List to store floating score texts
 floating_scores = []
@@ -274,7 +274,7 @@ def draw_paused_screen(
     )
 
 
-def add_floating_score(position: tuple[int, int], value: int):
+def add_floating_score(position, value):
     """
     Add a floating score text at the specified position
 
@@ -292,7 +292,7 @@ def add_floating_score(position: tuple[int, int], value: int):
     })
 
 
-def update_floating_scores(dt: float):
+def update_floating_scores(dt):
     """
     Update floating score positions and lifetimes
 
@@ -310,7 +310,7 @@ def update_floating_scores(dt: float):
             floating_scores.pop(i)
 
 
-def draw_floating_scores(screen: pygame.Surface, font: pygame.font.Font):
+def draw_floating_scores(screen, font):
     """
     Draw all active floating score texts
 

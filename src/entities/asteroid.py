@@ -8,8 +8,8 @@ that the player must avoid or destroy.
 import pygame
 import random
 
-from circleshape import CircleShape
-from constants import ASTEROID_MIN_RADIUS
+from src.entities.base import CircleShape
+from src.utils.constants import ASTEROID_MIN_RADIUS
 
 
 class Asteroid(CircleShape):

@@ -7,9 +7,9 @@ spaceship. It handles player movement, rotation, and shooting.
 
 import pygame
 
-from circleshape import CircleShape
-from shot import Shot
-from constants import (
+from src.entities.base import CircleShape
+from src.entities.shot import Shot
+from src.utils.constants import (
     PLAYER_RADIUS,
     PLAYER_TURN_SPEED,
     PLAYER_SPEED,

@@ -1,0 +1,256 @@
+"""
+Game Manager module for the Asteroids game.
+
+This module defines the Game class, which handles:
+- Game initialization
+- Main game loop
+- State management
+- Event handling
+"""
+
+import pygame
+import time
+
+from src.utils.constants import (
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+    ASTEROID_BASE_SCORE,
+    ASTEROID_MIN_RADIUS,
+    DEBUG_MODE,
+)
+from src.utils.game_state import GameState
+from src.entities.player import Player
+from src.entities.asteroid import Asteroid
+from src.managers.asteroid_manager import AsteroidField
+from src.entities.shot import Shot
+from src.ui import screens
+
+
+class Game:
+    """
+    Main game class that manages the game loop and state.
+    
+    This class is responsible for:
+    - Initializing pygame and game objects
+    - Running the main game loop
+    - Handling state transitions
+    - Processing input events
+    - Managing collisions and scoring
+    """
+    
+    def __init__(self):
+        """
+        Initialize the game, pygame, and create the game window.
+        """
+        print("Starting asteroids!")
+        print("Screen width:", SCREEN_WIDTH)
+        print("Screen height:", SCREEN_HEIGHT)
+
+        # Initialize pygame and create window
+        pygame.init()
+        self.title_font = pygame.font.Font(None, 64)  # Larger font for titles
+        self.normal_font = pygame.font.Font(None, 36)  # Medium font for instructions
+        self.small_font = pygame.font.Font(None, 24)  # Small font for scores/misc
+
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Asteroids")  # Set window title
+        self.clock = pygame.time.Clock()
+
+        # Create sprite groups for game objects
+        self.updatable = pygame.sprite.Group()
+        self.drawable = pygame.sprite.Group()
+        self.asteroids = pygame.sprite.Group()
+        self.shots = pygame.sprite.Group()
+
+        # Set container groups for each game object type
+        Player.containers = (self.updatable, self.drawable)
+        Asteroid.containers = (self.asteroids, self.updatable, self.drawable)
+        AsteroidField.containers = self.updatable
+        Shot.containers = (self.shots, self.updatable, self.drawable)
+
+        # Initialize score
+        self.score = 0
+
+        # Create initial game objects
+        self.player = None
+        self.asteroid_field = None
+        self.reset_game()
+
+        # Delta time for frame rate independence
+        self.dt = 0
+
+        # Start in menu state
+        self.current_game_state = GameState.MENU
+
+        # Difficulty settings
+        self.difficulty_level = 1
+        self.difficulty_timer = 0
+        self.DIFFICULTY_INCREASE_INTERVAL = 30  # seconds
+
+        # FPS tracking
+        self.prev_time = time.time()
+        self.fps_update_timer = 0
+        self.fps = 0
+        
+    def reset_game(self):
+        """
+        Reset game objects and state for a new game.
+        
+        Clears all sprite groups and recreates the player and asteroid field.
+        """
+        # Clear existing sprite groups
+        self.updatable.empty()
+        self.drawable.empty()
+        self.asteroids.empty()
+        self.shots.empty()
+
+        # Recreate player and asteroid field
+        self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        self.asteroid_field = AsteroidField()
+        
+        # Reset difficulty
+        self.difficulty_level = 1
+        self.difficulty_timer = 0
+        
+    def handle_events(self):
+        """
+        Process input events and handle state transitions.
+        
+        Returns:
+            bool: False if the game should exit, True otherwise
+        """
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+                
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p and self.current_game_state == GameState.PLAYING:
+                    self.current_game_state = GameState.PAUSED
+                elif (
+                    event.key == pygame.K_SPACE
+                    and self.current_game_state == GameState.PAUSED
+                ):
+                    self.current_game_state = GameState.PLAYING
+                elif (
+                    event.key == pygame.K_SPACE and self.current_game_state == GameState.MENU
+                ):
+                    # Reset game when starting from menu
+                    self.reset_game()
+                    self.score = 0
+                    self.current_game_state = GameState.PLAYING
+                elif (
+                    event.key == pygame.K_RETURN
+                    and self.current_game_state == GameState.GAME_OVER
+                ):
+                    self.current_game_state = GameState.MENU
+                    
+        return True
+        
+    def update(self):
+        """
+        Update game state based on current game state.
+        
+        Handles different update logic for different game states.
+        """
+        if self.current_game_state == GameState.MENU:
+            pass  # No updates needed in menu
+            
+        elif self.current_game_state == GameState.PLAYING:
+            # Update all game objects
+            self.updatable.update(self.dt)
+
+            # Check for collisions
+            for asteroid in self.asteroids:
+                if self.player.check_collision(asteroid):
+                    self.current_game_state = GameState.GAME_OVER
+
+                for bullet in self.shots:
+                    if bullet.check_collision(asteroid):
+                        # Add score based on asteroid size
+                        asteroid_score = ASTEROID_BASE_SCORE * (
+                            asteroid.radius // ASTEROID_MIN_RADIUS
+                        )
+                        self.score += asteroid_score
+
+                        # Display floating score text for feedback
+                        screens.add_floating_score(asteroid.position, asteroid_score)
+
+                        asteroid.split()
+                        bullet.kill()
+                        break
+
+            # Update difficulty level
+            self.difficulty_timer += self.dt
+            if self.difficulty_timer >= self.DIFFICULTY_INCREASE_INTERVAL:
+                self.difficulty_timer = 0
+                self.difficulty_level += 1
+                print(f"Difficulty increased to level {self.difficulty_level}")
+
+            # Adjust asteroid field parameters based on difficulty
+            self.asteroid_field.spawn_rate = max(
+                0.2, self.asteroid_field.spawn_rate - (self.difficulty_level * 0.05)
+            )
+            self.asteroid_field.speed_multiplier = 1.0 + (self.difficulty_level * 0.1)
+            
+        elif self.current_game_state == GameState.PAUSED:
+            pass  # No updates when paused
+            
+        elif self.current_game_state == GameState.GAME_OVER:
+            pass  # No updates when game over
+            
+    def render(self):
+        """
+        Render the current game state to the screen.
+        
+        Draws different UI elements based on the current game state.
+        """
+        # Clear screen with black
+        self.screen.fill((0, 0, 0))
+
+        # Current time for animations
+        current_time = time.time()
+        frame_time = current_time - self.prev_time
+        self.prev_time = current_time
+
+        # Update FPS counter
+        self.fps_update_timer += self.dt
+        if self.fps_update_timer >= 0.5:  # Update FPS display twice per second
+            self.fps = 1.0 / max(frame_time, 0.001)  # Avoid division by zero
+            self.fps_update_timer = 0
+
+        # Draw based on game state
+        if self.current_game_state == GameState.MENU:
+            screens.draw_menu_screen(self.screen, self.title_font, self.normal_font, current_time)
+        elif self.current_game_state == GameState.PLAYING:
+            screens.draw_game_screen(self.drawable, self.screen, self.small_font, self.score, self.dt)
+        elif self.current_game_state == GameState.PAUSED:
+            screens.draw_paused_screen(self.drawable, self.screen, self.title_font, self.normal_font)
+        elif self.current_game_state == GameState.GAME_OVER:
+            screens.draw_game_over_screen(self.drawable, self.screen, self.title_font, self.normal_font, self.score)
+
+        # Draw debug information if in debug mode
+        if DEBUG_MODE:
+            screens.draw_debug_info(self.screen, self.small_font, self.fps)
+
+        # Update display
+        pygame.display.flip()
+        
+    def run(self):
+        """
+        Run the main game loop.
+        
+        This is the main entry point for the game.
+        """
+        running = True
+        while running:
+            # Handle events
+            running = self.handle_events()
+            
+            # Update game state
+            self.update()
+            
+            # Render
+            self.render()
+            
+            # Limit the framerate to 60 FPS and calculate delta time
+            self.dt = self.clock.tick(60) / 1000

@@ -1,10 +1,33 @@
+"""
+Asteroid Manager module for the Asteroids game.
+
+This module defines the AsteroidField class, which manages the creation
+and spawning of asteroids throughout the game.
+"""
+
 import pygame
 import random
-from asteroid import Asteroid
-from constants import *
+from src.entities.asteroid import Asteroid
+from src.utils.constants import (
+    ASTEROID_MIN_RADIUS,
+    ASTEROID_MAX_RADIUS,
+    ASTEROID_KINDS,
+    ASTEROID_SPAWN_RATE,
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+)
 
 
 class AsteroidField(pygame.sprite.Sprite):
+    """
+    Manages the spawning and creation of asteroids.
+    
+    The AsteroidField class is responsible for:
+    - Spawning new asteroids at random edges of the screen
+    - Controlling the rate and difficulty of asteroid spawning
+    - Managing asteroid velocity and size distribution
+    """
+    
     edges = [
         [
             pygame.Vector2(1, 0),
@@ -29,6 +52,11 @@ class AsteroidField(pygame.sprite.Sprite):
     ]
 
     def __init__(self):
+        """
+        Initialize the asteroid field manager.
+        
+        Sets up initial spawn timer and difficulty parameters.
+        """
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.spawn_timer = 0.0
         self.spawn_rate = ASTEROID_SPAWN_RATE
@@ -40,10 +68,24 @@ class AsteroidField(pygame.sprite.Sprite):
         position: pygame.Vector2,
         velocity: pygame.Vector2,
     ):
+        """
+        Spawn a new asteroid with the given parameters.
+        
+        Args:
+            radius: Size of the asteroid to spawn
+            position: Initial position of the asteroid
+            velocity: Initial velocity vector of the asteroid
+        """
         asteroid = Asteroid(position.x, position.y, radius)
         asteroid.velocity = velocity
 
     def update(self: "AsteroidField", dt: float):
+        """
+        Update the asteroid field, potentially spawning new asteroids.
+        
+        Args:
+            dt: Delta time in seconds since the last frame
+        """
         self.spawn_timer += dt
         if self.spawn_timer > self.spawn_rate:
             self.spawn_timer = 0
