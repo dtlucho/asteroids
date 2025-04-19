@@ -283,7 +283,7 @@ class Game:
         elif self.current_game_state == GameState.GAME_OVER:
             pass  # No updates when game over
 
-    def render(self: "Game", screen: pygame.Surface):
+    def render(self: "Game"):
         """
         Render the current game state to the screen.
 

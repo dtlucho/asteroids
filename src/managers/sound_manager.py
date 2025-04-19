@@ -22,7 +22,7 @@ class SoundManager:
     """
 
     def __init__(
-        self: "SoundManager", resource_manager: "ResourceManager" | None = None
+        self: "SoundManager", resource_manager: "ResourceManager"
     ):
         """
         Initialize the sound manager.
