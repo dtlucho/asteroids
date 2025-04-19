@@ -10,21 +10,22 @@ for most game objects, implementing shared functionality like:
 
 import pygame
 
+
 class CircleShape(pygame.sprite.Sprite):
     """
     Base class for circular game objects.
-    
+
     This class extends pygame.sprite.Sprite and implements common functionality
     for game objects including position, velocity, collision detection, and the
     interface for drawing and updating.
-    
+
     All drawable game objects (Player, Asteroid, Shot) should inherit from this class.
     """
-    
-    def __init__(self: 'CircleShape', x: float, y: float, radius: float):
+
+    def __init__(self: "CircleShape", x: float, y: float, radius: float):
         """
         Initialize a new CircleShape.
-        
+
         Args:
             x: Initial x-coordinate
             y: Initial y-coordinate
@@ -40,40 +41,40 @@ class CircleShape(pygame.sprite.Sprite):
         self.velocity = pygame.Vector2(0, 0)
         self.radius = radius
 
-    def draw(self: 'CircleShape', screen: pygame.Surface):
+    def draw(self: "CircleShape", screen: pygame.Surface):
         """
         Draw the object on the screen.
-        
+
         This is an abstract method that should be implemented by subclasses.
-        
+
         Args:
             screen: The pygame surface to draw on
         """
         # Sub-classes must override this method
         pass
 
-    def update(self: 'CircleShape', dt: float):
+    def update(self: "CircleShape", dt: float):
         """
         Update the object's state for the current frame.
-        
+
         This is an abstract method that should be implemented by subclasses.
-        
+
         Args:
             dt: Delta time in seconds since the last frame
         """
         # Sub-classes must override this method
         pass
 
-    def check_collision(self: 'CircleShape', other: 'CircleShape') -> bool:
+    def check_collision(self: "CircleShape", other: "CircleShape") -> bool:
         """
         Check if this object collides with another CircleShape.
-        
+
         Uses simple circle-circle collision detection based on the distance
         between centers compared to the sum of radii.
-        
+
         Args:
             other: Another CircleShape object to check collision with
-            
+
         Returns:
             bool: True if collision detected, False otherwise
         """
@@ -81,14 +82,14 @@ class CircleShape(pygame.sprite.Sprite):
         if distance <= self.radius + other.radius:
             return True
         return False
-    
-    def wrap_position(self: 'CircleShape', screen_width: int, screen_height: int):
+
+    def wrap_position(self: "CircleShape", screen_width: int, screen_height: int):
         """
         Wrap the object's position around screen edges.
-        
+
         When object moves off one edge of the screen, it reappears
         from the opposite edge.
-        
+
         Args:
             screen_width: Width of the game screen
             screen_height: Height of the game screen
@@ -98,7 +99,7 @@ class CircleShape(pygame.sprite.Sprite):
             self.position.x = screen_width + self.radius
         elif self.position.x > screen_width + self.radius:
             self.position.x = -self.radius
-            
+
         # Wrap vertically
         if self.position.y < -self.radius:
             self.position.y = screen_height + self.radius

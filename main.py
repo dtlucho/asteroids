@@ -90,7 +90,9 @@ def main():
                     event.key == pygame.K_SPACE and current_game_state == GameState.MENU
                 ):
                     # Reset game when starting from menu
-                    player, asteroid_field = reset_game(updatable, drawable, asteroids, shots)
+                    player, asteroid_field = reset_game(
+                        updatable, drawable, asteroids, shots
+                    )
                     score = 0
                     current_game_state = GameState.PLAYING
                 elif (
@@ -114,12 +116,16 @@ def main():
                 for bullet in shots:
                     if bullet.check_collision(asteroid):
                         # Add score based on asteroid size
-                        asteroid_score = ASTEROID_BASE_SCORE * (asteroid.radius // ASTEROID_MIN_RADIUS)
+                        asteroid_score = ASTEROID_BASE_SCORE * (
+                            asteroid.radius // ASTEROID_MIN_RADIUS
+                        )
                         score += asteroid_score
-                        
+
                         # Display floating score text for feedback
-                        print(f"Score +{asteroid_score}")  # TODO: Replace with visual feedback
-                        
+                        print(
+                            f"Score +{asteroid_score}"
+                        )  # TODO: Replace with visual feedback
+
                         asteroid.split()
                         bullet.kill()
                         break
@@ -132,7 +138,9 @@ def main():
                 print(f"Difficulty increased to level {difficulty_level}")
 
             # Adjust asteroid field parameters based on difficulty
-            asteroid_field.spawn_rate = max(0.2, ASTEROID_SPAWN_RATE - (difficulty_level * 0.05))
+            asteroid_field.spawn_rate = max(
+                0.2, ASTEROID_SPAWN_RATE - (difficulty_level * 0.05)
+            )
             asteroid_field.speed_multiplier = 1.0 + (difficulty_level * 0.1)
         elif current_game_state == GameState.PAUSED:
             pass  # No updates when paused
@@ -146,7 +154,7 @@ def main():
         current_time = time.time()
         frame_time = current_time - prev_time
         prev_time = current_time
-        
+
         fps_update_timer += dt
         if fps_update_timer >= 0.5:  # Update FPS display twice per second
             fps = 1.0 / max(frame_time, 0.001)  # Avoid division by zero
@@ -175,13 +183,13 @@ def main():
 def reset_game(updatable, drawable, asteroids, shots):
     """
     Reset game objects and state for a new game
-    
+
     Args:
         updatable: Group containing updatable game objects
         drawable: Group containing drawable game objects
         asteroids: Group containing asteroid objects
         shots: Group containing player shots
-        
+
     Returns:
         tuple: (player, asteroid_field) - newly created game objects
     """
@@ -190,11 +198,11 @@ def reset_game(updatable, drawable, asteroids, shots):
     drawable.empty()
     asteroids.empty()
     shots.empty()
-    
+
     # Recreate player and asteroid field
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     asteroid_field = AsteroidField()
-    
+
     return player, asteroid_field
 
 
