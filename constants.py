@@ -26,3 +26,22 @@ PLAYER_SHOOT_COOLDOWN = 0.3           # Seconds between shots
 # Shot parameters
 SHOT_RADIUS = 5                       # Size of player shots
 SHOT_LIFETIME = 2.0                   # Seconds before shot disappears
+
+# UI Configuration
+UI_COLORS = {
+    "title": (255, 255, 255),
+    "subtitle": (200, 200, 200),
+    "score": (255, 255, 255),
+    "game_over": (255, 0, 0),
+    "instructions": (255, 255, 255),
+}
+
+UI_POSITIONS = {
+    "title": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4),
+    "instructions": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
+    "start_prompt": (SCREEN_WIDTH // 2, SCREEN_HEIGHT * 3 // 4),
+    "score": (20, 20),
+    "game_over": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3),
+    "final_score": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30),
+    "restart_prompt": (SCREEN_WIDTH // 2, SCREEN_HEIGHT * 2 // 3),
+}

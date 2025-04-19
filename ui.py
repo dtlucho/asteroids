@@ -9,7 +9,7 @@ This module contains functions for rendering game UI elements including:
 
 import math
 import pygame
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, UI_COLORS, UI_POSITIONS
 
 
 def draw_text(
@@ -87,10 +87,15 @@ def draw_pulsing_text(
     surface.blit(scaled_surface, text_rect)
 
 
-def draw_menu_screen(screen: pygame.Surface, title_font: pygame.font.Font, normal_font: pygame.font.Font, current_time: float):
+def draw_menu_screen(
+    screen: pygame.Surface,
+    title_font: pygame.font.Font,
+    normal_font: pygame.font.Font,
+    current_time: float,
+):
     """
     Draw the menu screen with title and instructions
-    
+
     Args:
         screen: The pygame surface to draw on
         title_font: Font for the title
@@ -101,8 +106,8 @@ def draw_menu_screen(screen: pygame.Surface, title_font: pygame.font.Font, norma
         screen,
         "ASTEROIDS",
         title_font,
-        (255, 255, 255),
-        (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4),
+        UI_COLORS["title"],
+        UI_POSITIONS["title"],
         centered=True,
     )
 
@@ -110,8 +115,8 @@ def draw_menu_screen(screen: pygame.Surface, title_font: pygame.font.Font, norma
         screen,
         "Arrow keys to move, SPACE to shoot",
         normal_font,
-        (200, 200, 200),
-        (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
+        UI_COLORS["instructions"],
+        UI_POSITIONS["instructions"],
         centered=True,
     )
 
@@ -120,16 +125,21 @@ def draw_menu_screen(screen: pygame.Surface, title_font: pygame.font.Font, norma
         screen,
         "Press SPACE to start",
         normal_font,
-        (255, 255, 255),
-        (SCREEN_WIDTH // 2, SCREEN_HEIGHT * 3 // 4),
+        UI_COLORS["instructions"],
+        UI_POSITIONS["start_prompt"],
         current_time,
     )
 
 
-def draw_game_screen(drawable: pygame.sprite.Group, screen: pygame.Surface, small_font: pygame.font.Font = None, score: int = 0):
+def draw_game_screen(
+    drawable: pygame.sprite.Group,
+    screen: pygame.Surface,
+    small_font: pygame.font.Font = None,
+    score: int = 0,
+):
     """
     Draw the main gameplay screen
-    
+
     Args:
         drawable: Group of drawable game objects
         screen: The pygame surface to draw on
@@ -139,23 +149,29 @@ def draw_game_screen(drawable: pygame.sprite.Group, screen: pygame.Surface, smal
     # Draw all game objects
     for obj in drawable:
         obj.draw(screen)
-    
+
     # Draw score if font is provided
     if small_font:
         draw_text(
             screen,
             f"SCORE: {score}",
             small_font,
-            (255, 255, 255),
-            (20, 20),
+            UI_COLORS["score"],
+            UI_POSITIONS["score"],
             centered=False,
         )
 
 
-def draw_game_over_screen(drawable: pygame.sprite.Group, screen: pygame.Surface, title_font: pygame.font.Font, normal_font: pygame.font.Font, score: int = 0):
+def draw_game_over_screen(
+    drawable: pygame.sprite.Group,
+    screen: pygame.Surface,
+    title_font: pygame.font.Font,
+    normal_font: pygame.font.Font,
+    score: int = 0,
+):
     """
     Draw the game over screen with final score
-    
+
     Args:
         drawable: Group of drawable game objects (shown in background)
         screen: The pygame surface to draw on
@@ -177,36 +193,41 @@ def draw_game_over_screen(drawable: pygame.sprite.Group, screen: pygame.Surface,
         screen,
         "GAME OVER",
         title_font,
-        (255, 0, 0),
-        (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3),
+        UI_COLORS["game_over"],
+        UI_POSITIONS["game_over"],
         centered=True,
     )
-    
+
     # Show score if available
     if score > 0:
         draw_text(
             screen,
             f"FINAL SCORE: {score}",
             normal_font,
-            (255, 255, 255),
-            (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30),
+            UI_COLORS["score"],
+            UI_POSITIONS["final_score"],
             centered=True,
         )
-    
+
     draw_text(
         screen,
         "Press ENTER to restart",
         normal_font,
-        (255, 255, 255),
-        (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30),
+        UI_COLORS["instructions"],
+        UI_POSITIONS["restart_prompt"],
         centered=True,
     )
 
 
-def draw_paused_screen(drawable: pygame.sprite.Group, screen: pygame.Surface, title_font: pygame.font.Font, normal_font: pygame.font.Font):
+def draw_paused_screen(
+    drawable: pygame.sprite.Group,
+    screen: pygame.Surface,
+    title_font: pygame.font.Font,
+    normal_font: pygame.font.Font,
+):
     """
     Draw the pause screen overlay
-    
+
     Args:
         drawable: Group of drawable game objects (shown in background)
         screen: The pygame surface to draw on
@@ -227,8 +248,8 @@ def draw_paused_screen(drawable: pygame.sprite.Group, screen: pygame.Surface, ti
         screen,
         "PAUSED",
         title_font,
-        (255, 255, 255),
-        (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3),
+        UI_COLORS["instructions"],
+        UI_POSITIONS["paused_prompt"],
         centered=True,
     )
 
@@ -236,7 +257,7 @@ def draw_paused_screen(drawable: pygame.sprite.Group, screen: pygame.Surface, ti
         screen,
         "Press SPACE to continue",
         normal_font,
-        (200, 200, 200),
-        (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
+        UI_COLORS["instructions"],
+        UI_POSITIONS["paused_prompt"],
         centered=True,
-    ) 
+    )

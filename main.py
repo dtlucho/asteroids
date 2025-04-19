@@ -62,6 +62,11 @@ def main():
     # Start in menu state
     current_game_state = GameState.MENU
 
+    # In the main function after initializing game objects
+    difficulty_level = 1
+    difficulty_timer = 0
+    DIFFICULTY_INCREASE_INTERVAL = 30  # seconds
+
     # Main game loop
     while True:
         # Handle events
@@ -113,6 +118,17 @@ def main():
                         asteroid.split()
                         bullet.kill()
                         break
+
+            # Update difficulty level
+            difficulty_timer += dt
+            if difficulty_timer >= DIFFICULTY_INCREASE_INTERVAL:
+                difficulty_timer = 0
+                difficulty_level += 1
+                print(f"Difficulty increased to level {difficulty_level}")
+
+            # Adjust asteroid field parameters based on difficulty
+            asteroid_field.spawn_rate = max(0.2, ASTEROID_SPAWN_RATE - (difficulty_level * 0.05))
+            asteroid_field.speed_multiplier = 1.0 + (difficulty_level * 0.1)
         elif current_game_state == GameState.PAUSED:
             pass  # No updates when paused
         elif current_game_state == GameState.GAME_OVER:
