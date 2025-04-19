@@ -19,7 +19,7 @@ class Shot(CircleShape):
     after traveling a certain distance or when they hit an asteroid.
     """
     
-    def __init__(self, x, y):
+    def __init__(self: 'Shot', x: float, y: float):
         """
         Initialize a new Shot.
         
@@ -30,7 +30,7 @@ class Shot(CircleShape):
         super().__init__(x, y, SHOT_RADIUS)
         self.lifetime = SHOT_LIFETIME  # Time before shot disappears
         
-    def draw(self, screen):
+    def draw(self: 'Shot', screen: pygame.Surface):
         """
         Draw the shot on the screen as a small circle.
         
@@ -39,7 +39,7 @@ class Shot(CircleShape):
         """
         pygame.draw.circle(screen, (255, 255, 255), self.position, self.radius, 2)
 
-    def update(self, dt):
+    def update(self: 'Shot', dt: float):
         """
         Update the shot's position and lifetime.
         

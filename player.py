@@ -24,7 +24,7 @@ class Player(CircleShape):
     The spaceship is drawn as a triangle pointing in the direction of travel.
     """
     
-    def __init__(self, x, y):
+    def __init__(self: 'Player', x: float, y: float):
         """
         Initialize a new Player.
         
@@ -36,7 +36,7 @@ class Player(CircleShape):
         self.rotation = 0           # Rotation angle in degrees (0 = up)
         self.soot_cooldown = 0      # Cooldown timer for shooting
     
-    def triangle(self):
+    def triangle(self: 'Player') -> list[pygame.Vector2]:
         """
         Calculate the vertices of the player's triangle shape.
         
@@ -50,7 +50,7 @@ class Player(CircleShape):
         c = self.position - forward * self.radius + right    # Back-right point
         return [a, b, c]
     
-    def draw(self, screen):
+    def draw(self: 'Player', screen: pygame.Surface):
         """
         Draw the player's spaceship on the screen.
         
@@ -59,7 +59,7 @@ class Player(CircleShape):
         """
         pygame.draw.polygon(screen, (255,255,255), self.triangle(), 2)
     
-    def rotate(self, dt):
+    def rotate(self: 'Player', dt: float):
         """
         Rotate the player's spaceship.
         
@@ -68,7 +68,7 @@ class Player(CircleShape):
         """
         self.rotation += PLAYER_TURN_SPEED * dt
 
-    def update(self, dt):
+    def update(self: 'Player', dt: float):
         """
         Update the player's state based on keyboard input.
         
@@ -103,7 +103,7 @@ class Player(CircleShape):
         # Keep player on screen by wrapping around edges
         self.wrap_position(SCREEN_WIDTH, SCREEN_HEIGHT)
     
-    def move(self, dt):
+    def move(self: 'Player', dt: float):
         """
         Move the player in the current facing direction.
         
@@ -113,7 +113,7 @@ class Player(CircleShape):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         self.position += forward * PLAYER_SPEED * dt
 
-    def shoot(self):
+    def shoot(self: 'Player'):
         """
         Fire a projectile if cooldown has expired.
         

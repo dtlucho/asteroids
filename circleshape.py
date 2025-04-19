@@ -21,7 +21,7 @@ class CircleShape(pygame.sprite.Sprite):
     All drawable game objects (Player, Asteroid, Shot) should inherit from this class.
     """
     
-    def __init__(self, x, y, radius):
+    def __init__(self: 'CircleShape', x: float, y: float, radius: float):
         """
         Initialize a new CircleShape.
         
@@ -40,7 +40,7 @@ class CircleShape(pygame.sprite.Sprite):
         self.velocity = pygame.Vector2(0, 0)
         self.radius = radius
 
-    def draw(self, screen):
+    def draw(self: 'CircleShape', screen: pygame.Surface):
         """
         Draw the object on the screen.
         
@@ -52,7 +52,7 @@ class CircleShape(pygame.sprite.Sprite):
         # Sub-classes must override this method
         pass
 
-    def update(self, dt):
+    def update(self: 'CircleShape', dt: float):
         """
         Update the object's state for the current frame.
         
@@ -64,7 +64,7 @@ class CircleShape(pygame.sprite.Sprite):
         # Sub-classes must override this method
         pass
 
-    def check_collision(self, other):
+    def check_collision(self: 'CircleShape', other: 'CircleShape') -> bool:
         """
         Check if this object collides with another CircleShape.
         
@@ -82,7 +82,7 @@ class CircleShape(pygame.sprite.Sprite):
             return True
         return False
     
-    def wrap_position(self, screen_width, screen_height):
+    def wrap_position(self: 'CircleShape', screen_width: int, screen_height: int):
         """
         Wrap the object's position around screen edges.
         
