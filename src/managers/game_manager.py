@@ -14,14 +14,13 @@ import time
 from src.utils.constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
-    ASTEROID_BASE_SCORE,
-    ASTEROID_MIN_RADIUS,
     DEBUG_MODE,
 )
 from src.utils.game_state import GameState
 from src.entities.player import Player
 from src.entities.asteroid import Asteroid
 from src.managers.asteroid_manager import AsteroidField
+from src.managers.collision_manager import CollisionManager
 from src.entities.shot import Shot
 from src.ui import screens
 
@@ -68,8 +67,8 @@ class Game:
         AsteroidField.containers = self.updatable
         Shot.containers = (self.shots, self.updatable, self.drawable)
 
-        # Initialize score
-        self.score = 0
+        # Create collision manager
+        self.collision_manager = CollisionManager(self.handle_collision_event)
 
         # Create initial game objects
         self.player = None
@@ -92,6 +91,16 @@ class Game:
         self.fps_update_timer = 0
         self.fps = 0
         
+    def handle_collision_event(self, event_type):
+        """
+        Handle collision events from the collision manager.
+        
+        Args:
+            event_type: String identifying the type of collision event
+        """
+        if event_type == "player_death":
+            self.current_game_state = GameState.GAME_OVER
+    
     def reset_game(self):
         """
         Reset game objects and state for a new game.
@@ -107,6 +116,9 @@ class Game:
         # Recreate player and asteroid field
         self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         self.asteroid_field = AsteroidField()
+        
+        # Reset collision manager
+        self.collision_manager.reset()
         
         # Reset difficulty
         self.difficulty_level = 1
@@ -136,7 +148,7 @@ class Game:
                 ):
                     # Reset game when starting from menu
                     self.reset_game()
-                    self.score = 0
+                    self.collision_manager.reset()
                     self.current_game_state = GameState.PLAYING
                 elif (
                     event.key == pygame.K_RETURN
@@ -159,25 +171,9 @@ class Game:
             # Update all game objects
             self.updatable.update(self.dt)
 
-            # Check for collisions
-            for asteroid in self.asteroids:
-                if self.player.check_collision(asteroid):
-                    self.current_game_state = GameState.GAME_OVER
-
-                for bullet in self.shots:
-                    if bullet.check_collision(asteroid):
-                        # Add score based on asteroid size
-                        asteroid_score = ASTEROID_BASE_SCORE * (
-                            asteroid.radius // ASTEROID_MIN_RADIUS
-                        )
-                        self.score += asteroid_score
-
-                        # Display floating score text for feedback
-                        screens.add_floating_score(asteroid.position, asteroid_score)
-
-                        asteroid.split()
-                        bullet.kill()
-                        break
+            # Check for collisions using the collision manager
+            self.collision_manager.check_player_asteroid_collisions(self.player, self.asteroids)
+            self.collision_manager.check_shot_asteroid_collisions(self.shots, self.asteroids)
 
             # Update difficulty level
             self.difficulty_timer += self.dt
@@ -222,11 +218,11 @@ class Game:
         if self.current_game_state == GameState.MENU:
             screens.draw_menu_screen(self.screen, self.title_font, self.normal_font, current_time)
         elif self.current_game_state == GameState.PLAYING:
-            screens.draw_game_screen(self.drawable, self.screen, self.small_font, self.score, self.dt)
+            screens.draw_game_screen(self.drawable, self.screen, self.small_font, self.collision_manager.get_score(), self.dt)
         elif self.current_game_state == GameState.PAUSED:
             screens.draw_paused_screen(self.drawable, self.screen, self.title_font, self.normal_font)
         elif self.current_game_state == GameState.GAME_OVER:
-            screens.draw_game_over_screen(self.drawable, self.screen, self.title_font, self.normal_font, self.score)
+            screens.draw_game_over_screen(self.drawable, self.screen, self.title_font, self.normal_font, self.collision_manager.get_score())
 
         # Draw debug information if in debug mode
         if DEBUG_MODE:
