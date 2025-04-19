@@ -82,30 +82,45 @@ class CollisionManager:
             asteroids: Group of asteroid objects
             
         Returns:
-            int: Number of collisions detected and processed
+            int: Number of asteroids destroyed
         """
-        collision_count = 0
+        destroyed_count = 0
         
-        for asteroid in asteroids:
-            for shot in shots:
+        for shot in shots:
+            for asteroid in asteroids:
                 if shot.check_collision(asteroid):
                     # Calculate score based on asteroid size
-                    asteroid_score = ASTEROID_BASE_SCORE * (
-                        asteroid.radius // ASTEROID_MIN_RADIUS
+                    score_value = int(ASTEROID_BASE_SCORE / (asteroid.radius / ASTEROID_MIN_RADIUS))
+                    self.score += score_value
+                    
+                    # Create floating score text
+                    screens.add_floating_score(
+                        asteroid.position,
+                        score_value
                     )
-                    self.score += asteroid_score
                     
-                    # Display floating score text for feedback
-                    screens.add_floating_score(asteroid.position, asteroid_score)
+                    # Store asteroid position and size for explosion effect
+                    asteroid_position = pygame.Vector2(asteroid.position)
+                    asteroid_size = asteroid.radius
                     
-                    # Split asteroid and remove shot
+                    # Try to split the asteroid
                     asteroid.split()
+                    
+                    # Remove the shot
                     shot.kill()
                     
-                    collision_count += 1
-                    break  # Move to next asteroid after collision
+                    # Notify about asteroid destruction with position and size
+                    if self.game_state_callback:
+                        self.game_state_callback(
+                            "asteroid_destroyed",
+                            position=asteroid_position,
+                            size=asteroid_size
+                        )
+                    
+                    destroyed_count += 1
+                    break  # Shot can only hit one asteroid
         
-        return collision_count
+        return destroyed_count
     
     def get_score(self):
         """

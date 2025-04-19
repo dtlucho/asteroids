@@ -27,6 +27,9 @@ from src.managers.power_up_manager import PowerUpManager
 from src.entities.shot import Shot
 from src.ui import screens
 from src.entities.power_up import PowerUp
+from src.utils.starfield import Starfield
+from src.effects.explosion import ExplosionManager
+from src.effects.screen_shake import ScreenShake
 
 
 class Game:
@@ -98,9 +101,16 @@ class Game:
         # Set power-up containers - this is important for proper sprite group management
         PowerUp.containers = (self.power_ups, self.updatable, self.drawable)
 
+        # Create visual effects
+        self.starfield = Starfield(SCREEN_WIDTH, SCREEN_HEIGHT, star_count=150)
+        self.explosion_manager = ExplosionManager()
+        self.screen_shake = ScreenShake()
+        
         # Create initial game objects
         self.player = None
         self.asteroid_field = None
+        
+        # Reset game to initial state
         self.reset_game()
 
         # Delta time for frame rate independence
@@ -119,17 +129,38 @@ class Game:
         self.fps_update_timer = 0
         self.fps = 0
         
-    def handle_collision_event(self, event_type):
+    def handle_collision_event(self, event_type, **kwargs):
         """
         Handle collision events from the collision manager.
         
         Args:
-            event_type: String identifying the type of collision event
+            event_type: Type of collision event
+            **kwargs: Additional event data
         """
         if event_type == "player_death":
-            self.sound_manager.play("game_over")
+            # Create a large explosion at player position
+            if hasattr(self, 'player') and self.player:
+                self.explosion_manager.create_explosion(
+                    self.player.position.x,
+                    self.player.position.y,
+                    size=40  # Large explosion for player death
+                )
+                # Strong screen shake for player death
+                self.screen_shake.start(intensity=15, duration=0.6)
             self.current_game_state = GameState.GAME_OVER
-    
+            
+        elif event_type == "asteroid_destroyed":
+            # Create explosion at asteroid position
+            if 'position' in kwargs and 'size' in kwargs:
+                self.explosion_manager.create_explosion(
+                    kwargs['position'].x,
+                    kwargs['position'].y,
+                    size=kwargs['size']
+                )
+                # Screen shake intensity based on asteroid size
+                shake_intensity = min(10, kwargs['size'] / 4)
+                self.screen_shake.start(intensity=shake_intensity, duration=0.3)
+                
     def reset_game(self):
         """
         Reset game objects and state for a new game.
@@ -201,6 +232,13 @@ class Game:
             pass  # No updates needed in menu
             
         elif self.current_game_state == GameState.PLAYING:
+            # Update starfield with player velocity for parallax effect
+            self.starfield.update(self.dt, self.player.velocity if self.player else None)
+            
+            # Update visual effects
+            self.explosion_manager.update(self.dt)
+            self.screen_shake.update(self.dt)
+            
             # Update all game objects
             self.updatable.update(self.dt)
 
@@ -210,6 +248,9 @@ class Game:
             
             # Update power-ups
             self.power_up_manager.update(self.dt, self.player)
+            
+            # Update floating score texts
+            screens.update_floating_scores(self.dt)
 
             # Update difficulty level
             self.difficulty_timer += self.dt
@@ -236,8 +277,17 @@ class Game:
         
         Draws different UI elements based on the current game state.
         """
-        # Clear screen with black
-        self.screen.fill((0, 0, 0))
+        # Create a temporary surface for rendering with screen shake
+        temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        
+        # Clear screen with very dark blue (almost black, but with a hint of color)
+        temp_surface.fill((2, 3, 10))
+        
+        # Draw starfield background
+        self.starfield.draw(temp_surface)
+        
+        # Draw explosion effects
+        self.explosion_manager.draw(temp_surface)
 
         # Current time for animations
         current_time = time.time()
@@ -252,21 +302,27 @@ class Game:
 
         # Draw based on game state
         if self.current_game_state == GameState.MENU:
-            screens.draw_menu_screen(self.screen, self.title_font, self.normal_font, current_time)
+            screens.draw_menu_screen(temp_surface, self.title_font, self.normal_font, current_time)
         elif self.current_game_state == GameState.PLAYING:
             # Draw game objects
-            screens.draw_game_screen(self.drawable, self.screen, self.small_font, self.collision_manager.get_score(), self.dt)
+            screens.draw_game_screen(self.drawable, temp_surface, self.small_font, self.collision_manager.get_score(), self.dt)
             
             # Draw power-ups
-            self.power_up_manager.draw(self.screen)
+            self.power_up_manager.draw(temp_surface)
+            
+            # Draw floating score texts
+            screens.draw_floating_scores(temp_surface, self.small_font)
         elif self.current_game_state == GameState.PAUSED:
-            screens.draw_paused_screen(self.drawable, self.screen, self.title_font, self.normal_font)
+            screens.draw_paused_screen(self.drawable, temp_surface, self.title_font, self.normal_font)
         elif self.current_game_state == GameState.GAME_OVER:
-            screens.draw_game_over_screen(self.drawable, self.screen, self.title_font, self.normal_font, self.collision_manager.get_score())
+            screens.draw_game_over_screen(self.drawable, temp_surface, self.title_font, self.normal_font, self.collision_manager.get_score())
 
         # Draw debug information if in debug mode
         if DEBUG_MODE:
-            screens.draw_debug_info(self.screen, self.small_font, self.fps)
+            screens.draw_debug_info(temp_surface, self.small_font, self.fps)
+            
+        # Apply screen shake and blit the temp surface to the main screen
+        self.screen.blit(temp_surface, (self.screen_shake.offset_x, self.screen_shake.offset_y))
 
         # Update display
         pygame.display.flip()
