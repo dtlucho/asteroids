@@ -6,6 +6,7 @@ and caching of game assets such as fonts, images, and sounds.
 """
 
 import pygame
+import os
 
 
 class ResourceManager:
@@ -30,8 +31,19 @@ class ResourceManager:
         self.fonts = {}  # Cache for loaded fonts
         self.images = {}  # Cache for loaded images (for future use)
         self.sounds = {}  # Cache for loaded sounds (for future use)
+        
+        # Path to assets directory
+        self.assets_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'assets')
+        
+        # Path to retro font
+        self.retro_font_path = os.path.join(self.assets_dir, 'fonts', 'arcade_classic.ttf')
+        
+        # Check if retro font exists
+        if not os.path.exists(self.retro_font_path):
+            print(f"Warning: Retro font not found at {self.retro_font_path}")
+            self.retro_font_path = None
     
-    def get_font(self, size, name=None):
+    def get_font(self, size, name=None, use_retro=True):
         """
         Get a font of the specified size.
         
@@ -41,10 +53,15 @@ class ResourceManager:
         Args:
             size: Font size in points
             name: Font name or path (None for default font)
+            use_retro: Whether to use the retro font (if available)
             
         Returns:
             pygame.font.Font: The requested font
         """
+        # If retro font is requested and available, use it
+        if use_retro and self.retro_font_path and os.path.exists(self.retro_font_path):
+            name = self.retro_font_path
+        
         # Create a unique key for this font
         key = f"{name}_{size}"
         
