@@ -44,6 +44,8 @@ UI_POSITIONS = {
     "game_over": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3),
     "final_score": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30),
     "restart_prompt": (SCREEN_WIDTH // 2, SCREEN_HEIGHT * 2 // 3),
+    "paused_title": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50),
+    "paused_instructions": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30),
 }
 
 # Debug settings
