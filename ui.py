@@ -9,7 +9,11 @@ This module contains functions for rendering game UI elements including:
 
 import math
 import pygame
+import time
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, UI_COLORS, UI_POSITIONS, SHOW_FPS
+
+# List to store floating score texts
+floating_scores = []
 
 
 def draw_text(
@@ -136,6 +140,7 @@ def draw_game_screen(
     screen: pygame.Surface,
     small_font: pygame.font.Font = None,
     score: int = 0,
+    dt: float = 0,
 ):
     """
     Draw the main gameplay screen
@@ -145,6 +150,7 @@ def draw_game_screen(
         screen: The pygame surface to draw on
         small_font: Font for score display (optional)
         score: Current score to display (optional)
+        dt: Delta time for updating animations (optional)
     """
     # Draw all game objects
     for obj in drawable:
@@ -160,6 +166,10 @@ def draw_game_screen(
             UI_POSITIONS["score"],
             centered=False,
         )
+        
+        # Update and draw floating score texts
+        update_floating_scores(dt)
+        draw_floating_scores(screen, small_font)
 
 
 def draw_game_over_screen(
@@ -243,24 +253,84 @@ def draw_paused_screen(
     overlay.fill((0, 0, 0, 128))  # Semi-transparent black
     screen.blit(overlay, (0, 0))
 
-    # Paused text
+    # Paused title
     draw_text(
         screen,
         "PAUSED",
         title_font,
         UI_COLORS["instructions"],
-        UI_POSITIONS["paused_prompt"],
+        UI_POSITIONS["paused_title"],
         centered=True,
     )
 
+    # Paused instructions
     draw_text(
         screen,
         "Press SPACE to continue",
         normal_font,
         UI_COLORS["instructions"],
-        UI_POSITIONS["paused_prompt"],
+        UI_POSITIONS["paused_instructions"],
         centered=True,
     )
+
+
+def add_floating_score(position: tuple[int, int], value: int):
+    """
+    Add a floating score text at the specified position
+
+    Args:
+        position: (x, y) tuple for the position where the score was earned
+        value: Score value to display
+    """
+    floating_scores.append({
+        "position": pygame.Vector2(position),
+        "value": value,
+        "color": (255, 255, 100),  # Yellow color for visibility
+        "created_time": time.time(),
+        "lifetime": 1.5,  # How long the text stays on screen
+        "velocity": pygame.Vector2(0, -50)  # Move upward
+    })
+
+
+def update_floating_scores(dt: float):
+    """
+    Update floating score positions and lifetimes
+
+    Args:
+        dt: Delta time in seconds since the last frame
+    """
+    current_time = time.time()
+    # Update each floating score and remove expired ones
+    for i in range(len(floating_scores) - 1, -1, -1):
+        score = floating_scores[i]
+        # Update position
+        score["position"] += score["velocity"] * dt
+        # Check if expired
+        if current_time - score["created_time"] > score["lifetime"]:
+            floating_scores.pop(i)
+
+
+def draw_floating_scores(screen: pygame.Surface, font: pygame.font.Font):
+    """
+    Draw all active floating score texts
+
+    Args:
+        screen: The pygame surface to draw on
+        font: Font to use for score text
+    """
+    for score in floating_scores:
+        # Calculate alpha based on remaining lifetime
+        elapsed = time.time() - score["created_time"]
+        alpha = max(0, min(255, int(255 * (1 - elapsed / score["lifetime"]))))
+        
+        # Create color with alpha
+        color = list(score["color"])
+        
+        # Draw the score text
+        text = f"+{score['value']}"
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect(center=score["position"])
+        screen.blit(text_surface, text_rect)
 
 
 def draw_debug_info(screen: pygame.Surface, small_font: pygame.font.Font, fps: float):

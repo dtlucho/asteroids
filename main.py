@@ -122,9 +122,7 @@ def main():
                         score += asteroid_score
 
                         # Display floating score text for feedback
-                        print(
-                            f"Score +{asteroid_score}"
-                        )  # TODO: Replace with visual feedback
+                        ui.add_floating_score(asteroid.position, asteroid_score)
 
                         asteroid.split()
                         bullet.kill()
@@ -163,7 +161,7 @@ def main():
         if current_game_state == GameState.MENU:
             ui.draw_menu_screen(screen, title_font, normal_font, current_time)
         elif current_game_state == GameState.PLAYING:
-            ui.draw_game_screen(drawable, screen, small_font, score)
+            ui.draw_game_screen(drawable, screen, small_font, score, dt)
         elif current_game_state == GameState.PAUSED:
             ui.draw_paused_screen(drawable, screen, title_font, normal_font)
         elif current_game_state == GameState.GAME_OVER:
