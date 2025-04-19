@@ -9,6 +9,7 @@ This is the main entry point for the game, handling:
 """
 
 import pygame
+import time
 
 from constants import *
 from game_state import GameState
@@ -66,6 +67,10 @@ def main():
     difficulty_level = 1
     difficulty_timer = 0
     DIFFICULTY_INCREASE_INTERVAL = 30  # seconds
+
+    prev_time = time.time()
+    fps_update_timer = 0
+    fps = 0
 
     # Main game loop
     while True:
@@ -138,7 +143,14 @@ def main():
         screen.fill((0, 0, 0))  # Clear screen with black
 
         # Current time for animations
-        current_time = pygame.time.get_ticks() / 1000  # Convert to seconds
+        current_time = time.time()
+        frame_time = current_time - prev_time
+        prev_time = current_time
+        
+        fps_update_timer += dt
+        if fps_update_timer >= 0.5:  # Update FPS display twice per second
+            fps = 1.0 / max(frame_time, 0.001)  # Avoid division by zero
+            fps_update_timer = 0
 
         if current_game_state == GameState.MENU:
             ui.draw_menu_screen(screen, title_font, normal_font, current_time)
@@ -148,6 +160,10 @@ def main():
             ui.draw_paused_screen(drawable, screen, title_font, normal_font)
         elif current_game_state == GameState.GAME_OVER:
             ui.draw_game_over_screen(drawable, screen, title_font, normal_font, score)
+
+        # Draw debug information if in debug mode
+        if DEBUG_MODE:
+            ui.draw_debug_info(screen, small_font, fps)
 
         # Update display
         pygame.display.flip()

@@ -45,3 +45,7 @@ UI_POSITIONS = {
     "final_score": (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30),
     "restart_prompt": (SCREEN_WIDTH // 2, SCREEN_HEIGHT * 2 // 3),
 }
+
+# Debug settings
+DEBUG_MODE = True  # Set to False for release
+SHOW_FPS = True

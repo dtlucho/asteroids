@@ -9,7 +9,7 @@ This module contains functions for rendering game UI elements including:
 
 import math
 import pygame
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, UI_COLORS, UI_POSITIONS
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, UI_COLORS, UI_POSITIONS, SHOW_FPS
 
 
 def draw_text(
@@ -261,3 +261,24 @@ def draw_paused_screen(
         UI_POSITIONS["paused_prompt"],
         centered=True,
     )
+
+
+def draw_debug_info(screen: pygame.Surface, small_font: pygame.font.Font, fps: float):
+    """
+    Draw debug information like FPS counter
+
+    Args:
+        screen: The pygame surface to draw on
+        small_font: Font for debug info text
+        fps: Current frames per second
+    """
+    if SHOW_FPS:
+        fps_text = f"FPS: {int(fps)}"
+        draw_text(
+            screen,
+            fps_text,
+            small_font,
+            (150, 150, 150),
+            (SCREEN_WIDTH - 100, 20),
+            centered=False,
+        )
