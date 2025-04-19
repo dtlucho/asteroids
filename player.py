@@ -34,7 +34,7 @@ class Player(CircleShape):
         """
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0           # Rotation angle in degrees (0 = up)
-        self.soot_cooldown = 0      # Cooldown timer for shooting
+        self.shoot_cooldown = 0      # Cooldown timer for shooting
     
     def triangle(self: 'Player') -> list[pygame.Vector2]:
         """
@@ -79,7 +79,7 @@ class Player(CircleShape):
             dt: Delta time in seconds since the last frame
         """
         # Update shooting cooldown
-        self.soot_cooldown -= dt
+        self.shoot_cooldown -= dt
         
         # Get current keyboard state
         keys = pygame.key.get_pressed()
@@ -119,11 +119,11 @@ class Player(CircleShape):
         
         Creates a new Shot object moving in the direction the player is facing.
         """
-        if self.soot_cooldown > 0:
+        if self.shoot_cooldown > 0:
             return
             
         # Reset cooldown timer
-        self.soot_cooldown = PLAYER_SHOOT_COOLDOWN
+        self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN
         
         # Create new shot at player's position
         shot = Shot(self.position.x, self.position.y)
