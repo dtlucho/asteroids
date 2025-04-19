@@ -16,11 +16,13 @@ from src.utils.constants import (
     SCREEN_HEIGHT,
     DEBUG_MODE,
 )
+from src.utils.resource_manager import ResourceManager
 from src.utils.game_state import GameState
 from src.entities.player import Player
 from src.entities.asteroid import Asteroid
 from src.managers.asteroid_manager import AsteroidField
 from src.managers.collision_manager import CollisionManager
+from src.managers.sound_manager import SoundManager
 from src.entities.shot import Shot
 from src.ui import screens
 
@@ -47,9 +49,22 @@ class Game:
 
         # Initialize pygame and create window
         pygame.init()
-        self.title_font = pygame.font.Font(None, 64)  # Larger font for titles
-        self.normal_font = pygame.font.Font(None, 36)  # Medium font for instructions
-        self.small_font = pygame.font.Font(None, 24)  # Small font for scores/misc
+        
+        # Initialize resource manager
+        self.resource_manager = ResourceManager()
+        
+        # Load fonts through the resource manager
+        self.title_font = self.resource_manager.get_font(64)  # Larger font for titles
+        self.normal_font = self.resource_manager.get_font(36)  # Medium font for instructions
+        self.small_font = self.resource_manager.get_font(24)  # Small font for scores/misc
+        
+        # Initialize sound manager
+        self.sound_manager = SoundManager(self.resource_manager)
+        self.sound_manager.load_sounds()
+        
+        # Set sound manager references in game entities
+        Player.sound_manager = self.sound_manager
+        Asteroid.sound_manager = self.sound_manager
 
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Asteroids")  # Set window title
@@ -99,6 +114,7 @@ class Game:
             event_type: String identifying the type of collision event
         """
         if event_type == "player_death":
+            self.sound_manager.play("game_over")
             self.current_game_state = GameState.GAME_OVER
     
     def reset_game(self):
@@ -150,6 +166,8 @@ class Game:
                     self.reset_game()
                     self.collision_manager.reset()
                     self.current_game_state = GameState.PLAYING
+                    # Play a sound effect when starting the game
+                    self.sound_manager.play("shoot")
                 elif (
                     event.key == pygame.K_RETURN
                     and self.current_game_state == GameState.GAME_OVER

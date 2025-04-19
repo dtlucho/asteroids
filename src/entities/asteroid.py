@@ -19,6 +19,9 @@ class Asteroid(CircleShape):
     Asteroids move in straight lines and can be split into smaller
     asteroids when hit by player shots.
     """
+    
+    # Class-level reference to sound manager (set by Game class)
+    sound_manager = None
 
     def __init__(self: "Asteroid", x: float, y: float, radius: float):
         """
@@ -48,6 +51,14 @@ class Asteroid(CircleShape):
             bool: True if the asteroid was split, False if it was just destroyed
         """
         self.kill()
+        
+        # Play appropriate sound effect based on asteroid size
+        if Asteroid.sound_manager:
+            if self.radius <= ASTEROID_MIN_RADIUS:
+                Asteroid.sound_manager.play("explosion_small")
+            else:
+                Asteroid.sound_manager.play("explosion_large")
+        
         if self.radius <= ASTEROID_MIN_RADIUS:
             return False
 

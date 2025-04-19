@@ -32,6 +32,9 @@ class Player(CircleShape):
 
     The spaceship is drawn as a triangle pointing in the direction of travel.
     """
+    
+    # Class-level reference to sound manager (set by Game class)
+    sound_manager = None
 
     def __init__(self: "Player", x: float, y: float):
         """
@@ -141,3 +144,7 @@ class Player(CircleShape):
         direction = pygame.Vector2(0, 1).rotate(self.rotation)
         velocity = direction * PLAYER_SHOOT_SPEED
         shot.velocity = velocity
+        
+        # Play shooting sound if sound manager is available
+        if Player.sound_manager:
+            Player.sound_manager.play("shoot")
